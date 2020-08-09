@@ -1,0 +1,20 @@
+{
+	"employee": {
+		"firstName": "Akash",
+		"lastName": "Ranglani",
+		"address": [
+			{
+				"AddressType" : "Primary",
+				"street": "1223, 11 redwood St..",
+				"city": "LA",
+				"state": "CA"
+			},
+			{
+				"AddressType" : "Secondary",
+				"street": "14332, 14th Clover garden",
+				"city": "California Bay Area",
+				"state": "CA"
+			}
+		]
+	}
+}

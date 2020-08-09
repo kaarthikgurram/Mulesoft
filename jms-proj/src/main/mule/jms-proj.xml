@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f7cdb089-22e0-42e8-94c1-35debb85e10a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="604dcc71-fbc2-4ba3-9f96-b3cd33e295d8" numberOfConsumers="4" destination="myqueue" transactionType="LOCAL" primaryNodeOnly="true" transactionalAction="NONE" config-ref="JMS_Config">
+		<jms:active-mq-connection >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="jms-projFlow" doc:id="f1478fa4-19e5-4a29-8c27-b4fe4433a59c" >
+		<http:listener doc:name="Listener" doc:id="73f81115-c5a8-4248-95b4-5547b88695e4" config-ref="HTTP_Listener_config" path="/queue"/>
+		<jms:publish doc:name="Publish" doc:id="d764b75d-ee71-491f-9783-16cec1382225" config-ref="JMS_Config" destination="myqueue"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2f2252c3-f2ea-489c-9b05-9f26f3e0a2c5" message="logger before consuming"/>
+	</flow>
+	<flow name="jms-projFlow1" doc:id="6b647494-7a71-499c-8adc-529b8ff2c820" >
+		<jms:listener doc:name="Listener" doc:id="604dcc71-fbc2-4ba3-9f96-b3cd33e295d8" config-ref="JMS_Config" destination="myqueue"/>
+		<jms:consume doc:name="Consume" doc:id="f0d96a9a-f04e-46e1-b906-7efbd0fd3900" config-ref="JMS_Config" destination="myqueue">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:consume>
+		<logger level="INFO" doc:name="Logger" doc:id="ed0fc1bf-9623-4f4d-a659-5b32cf78162a" message="logger after consuming"/>
+	</flow>
+</mule>

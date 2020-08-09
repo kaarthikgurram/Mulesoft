@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="75691193-82ac-456a-911b-eb4e20e39984" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="add8011a-40d8-4ca7-afde-8ff57d6f40f3" >
+		<email:smtp-connection host="smtp.gmail.com" port="587" user="kaarthik4all@gmail.com" password="Venkatesh4u" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="readfrompropertyfileFlow" doc:id="b215f3c2-ce73-4719-94f9-4a72d74b2529" >
+		<http:listener doc:name="Listener" doc:id="39833bb7-f0c7-474e-baaf-5ae6358e4bf3" config-ref="HTTP_Listener_config" path="/"/>
+		<ee:transform doc:name="Transform Message" doc:id="3fac7f47-7d08-4196-b410-dae21c669943" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+emaild: p('emailid') splitBy(',')]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="1b1883eb-08d4-4797-8cb1-899bfab07e21" collection="#[payload.emaild]">
+			<logger level="INFO" doc:name="Logger" doc:id="5effa9a1-f924-42ca-8c15-e61231d75662" message="#[payload]" />
+		</foreach>
+	</flow>
+</mule>

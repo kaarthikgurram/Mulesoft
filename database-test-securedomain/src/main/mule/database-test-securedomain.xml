@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="database-test-securedomainFlow" doc:id="1229238c-81be-4788-b5ea-788d9aaa0c97" >
+		<http:listener doc:name="Listener" doc:id="f0d638f6-d6ac-4cd2-b2d4-4ce6d8dd8a61" config-ref="HTTP_Listener_config" path="/"/>
+		<db:select doc:name="Select" doc:id="723cebd2-f879-416e-8e86-77e293ba58db" config-ref="Database_Config">
+			<db:sql >select * from world.city
+where CountryCode = 'AFG';</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="5f42a48e-7d15-404e-930e-ad1f202a9305" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ad2add48-45df-4cc1-81c4-7fc88b17d7ed" message="#[payload]"/>
+	</flow>
+</mule>

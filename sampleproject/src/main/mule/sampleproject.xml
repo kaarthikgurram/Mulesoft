@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9cd0b5f5-d5c9-48fb-8216-59fbf2aa0196" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="P@ssw0rd" database="world" />
+	</db:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="be3d7504-7d1b-431c-b0b3-1e9c62cfeafc" basePath="/" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sampleprojectFlow1" doc:id="64845caa-cb90-4dbc-a287-0b957bf65935" >
+		<http:listener doc:name="Listener" doc:id="319ebf64-a2be-42c4-b4dc-eb4d93ffa060" config-ref="HTTP_Listener_config" path="/hello/{name}"/>
+		<set-variable value="#[attributes.uriParams.name]" doc:name="Set Variable" doc:id="5c58f848-299d-40cd-9f99-0909c2c36192" variableName="name"/>
+		<set-payload value="#['Hi! This is Ammulu ' ++  vars.name as String]" doc:name="Set Payload" doc:id="474e81bf-048a-4608-b3d6-5cecd5fd54fe" mimeType="text/plain"/>
+		<logger level="INFO" doc:name="Logger" doc:id="828768fc-ef2c-401a-8e43-5173907b87df" message="#[payload]"/>
+	</flow>
+</mule>

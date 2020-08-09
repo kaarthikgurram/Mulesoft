@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="508ae5ce-f06c-465a-b6de-87c0ca6847dc" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="36374462-91bc-450c-b245-dfedbf8442a7" >
+		<jms:active-mq-connection >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="58e11c8b-9321-4e29-9635-18d264e8f1e6" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="P@ssw0rd" database="world" />
+	</db:config>
+	<flow name="jmstodbFlow" doc:id="08c94b60-8123-4296-9a30-e94ef9f70c6f" >
+		<http:listener doc:name="Listener" doc:id="b49c794a-0b51-442d-8a57-d87d92aa1f3c" config-ref="HTTP_Listener_config" path="/" outputMimeType="application/json" allowedMethods="POST"/>
+		<jms:publish doc:name="Publish" doc:id="20c9b9e0-6e6a-4f47-9b60-d7d565780940" config-ref="JMS_Config" destination="myqueue"/>
+		<jms:consume doc:name="Consume" doc:id="3489f7d2-c84f-451f-bd5d-245e87c283bf" config-ref="JMS_Config" destination="myqueue"/>
+		<set-variable value="#[%dw 2.0
+output application/json
+---
+payload.customerId]" doc:name="setCustomeId" doc:id="c6f317e5-9408-4c88-9a42-a4501104a8bd" variableName="customerId"/>
+		<ee:transform doc:name="Transform Message" doc:id="945be105-0aa7-4f28-9ab9-5ed4de2a82cb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:update doc:name="Update" doc:id="415903c5-9e2c-48ba-a121-142ad91f59ff" config-ref="Database_Config">
+			<db:sql >update world.customer
+set place = :place
+where customerId=:customerId;
+</db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	customerId: payload.customerId,
+	place: payload.place
+}]]]></db:input-parameters>
+		</db:update>
+		<db:select doc:name="Select" doc:id="6291d4e8-efce-4d44-b036-10400d7ded10" config-ref="Database_Config">
+			<db:sql>select * from world.customer
+where customerId =:customerId;</db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	customerId: vars.customerId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9b9ad6b2-f4fe-42f9-9833-9120ea37337f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a814111e-fbee-4a73-a63f-4eea47f15879" message="#[payload]"/>
+	</flow>
+</mule>

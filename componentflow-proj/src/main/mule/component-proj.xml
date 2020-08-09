@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="62ce716f-0cfb-4ce8-8630-df6578318e85" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="component-projFlow" doc:id="decef7b9-79ec-427d-a44c-1fec53aae170" >
+		<http:listener doc:name="Listener" doc:id="863e72ae-b3d3-4510-8a11-bef0cbefa5d2" config-ref="HTTP_Listener_config" path="/"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="f7c36fdc-5ae6-4abd-a1e2-b20574348fc1" >
+			<route >
+				<flow-ref doc:name="Flow Reference" doc:id="d3ae1dfc-6ecd-4bee-b7b2-b53217b263a8" name="flow1-add"/>
+			</route>
+			<route >
+				<flow-ref doc:name="Flow Reference" doc:id="924d5845-e8b9-4e48-8d2f-3d4189e84275" name="flow2-substract"/>
+			</route>
+			<route >
+				<flow-ref doc:name="Flow Reference" doc:id="e4907885-20c2-45c0-99b3-b0320783133e" name="flow3-multiply"/>
+			</route>
+			<route >
+				<set-payload value="operation not available" doc:name="Set Payload" doc:id="6253a21c-b21a-48a2-b0a3-73449674a19d" />
+			</route>
+			<route >
+				<flow-ref doc:name="Flow Reference" doc:id="b3326197-e616-477f-aa4c-ecd75f48b1f4" name="flow4-Divide"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="b829ac76-c9b2-47f0-a2e4-1b65ff11228d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+	flatten(payload..payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="flow1-add" doc:id="a68a4d4c-65f7-4b39-8611-12125437057a" >
+		<ee:transform doc:name="Transform Message" doc:id="a4001e35-aab4-447b-86e8-bc47440cc6b7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	add: 20+10
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="flow2-substract" doc:id="ec7e1771-d5e3-46d5-b616-a43c2f759087" >
+		<ee:transform doc:name="Transform Message" doc:id="9e8e225b-1945-4523-bb9a-6da4d2b0c43a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	substract: 20-10
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="flow3-multiply" doc:id="917d8fa1-6130-4f6a-897d-319734bc45f1" >
+		<ee:transform doc:name="Transform Message" doc:id="0d35d7ed-abf4-461e-b3d8-70fd6217ed8b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+{
+	multiply: 20*10
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="flow4-Divide" doc:id="651be948-8142-45e8-9b0a-fe71b1ce1e56" >
+		<ee:transform doc:name="Transform Message" doc:id="e67cbebd-1c84-41ea-8ad0-8c4addfaf65b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	Divide: 20/0
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

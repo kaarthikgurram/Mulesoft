@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="test" format="excel">
+      <types:shape format="weave"><![CDATA[%dw 2.0
+
+type test = {|
+  Sheet1?: Array<{|    customerId: String,     name: String,     phoneno: String,     place: String  |}>
+|}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#d09dd593-ecc0-44df-8b7f-0174cd0a99f7">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="test"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#5a67506c-7be4-4d8d-a3c2-1a0ff6cca3fc">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="test"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#b8917553-28a2-4136-a851-95d6565df4c9">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="test"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="food" format="xml">
+      <types:example format="xml" element="breakfast_menu" location="foodData.xml"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#80b886c4-0462-4647-bb67-b01cdebde4ab">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="food"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

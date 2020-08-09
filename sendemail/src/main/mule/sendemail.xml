@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d3eb84c4-7a69-4254-ba57-17cc6191fc93" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="868c443b-c34e-4600-822f-e8efa21992fe" >
+		<email:smtp-connection host="smtp.gmail.com" port="587" user="kaarthik4all@gmail.com" password="Venkatesh4u" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="a34e3050-b281-4079-8cc7-23ef633dfae2" >
+		<file:connection workingDir="C:\softwares\AnypointStudio\AnypointStudio\sampledatafiles" />
+	</file:config>
+	<flow name="sendemailFlow" doc:id="7b1ed962-c238-4aa5-b83b-f1c374e0102c" >
+		<http:listener doc:name="Listener" doc:id="72f83797-464b-4c07-8ddf-17a2b0ffe41d" config-ref="HTTP_Listener_config" path="/"/>
+		<ee:transform doc:name="Transform Message" doc:id="4a3636e5-bf03-4ad3-9ec8-00eae1e00cb9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+emailid: p('emailid') splitBy(',')]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="681dccdb-4289-4df4-8039-ba41d862ed21" collection="#[payload.emailid]">
+			<logger level="INFO" doc:name="Logger" doc:id="17ced72b-a860-424a-8563-ccc9cbedf8ba" message="#[payload]" />
+			<email:send doc:name="Send" doc:id="ae307034-bcf3-48ba-8e9b-7a85b14f9ff2" config-ref="Email_SMTP" fromAddress="kaarthik4all@gmail.com" toAddresses="#[%dw 2.0
+output application/java
+---
+vars.rootMessage.payload.emailid as String]"/>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="59a95bd8-b8cf-47a7-92d7-3025264243cd" message="#[payload]"/>
+	</flow>
+</mule>

@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="EmployeeObject" format="json">
+      <types:shape format="weave" example="employeeData.json"><![CDATA[%dw 2.0
+
+type EmployeeObject = {|
+  status: String, 
+  data: {|
+    id: String, 
+    employee_name: String, 
+    employee_salary: String, 
+    employee_age: String, 
+    profile_image: String
+  |}
+|} {"example": "{\\\"status\\\":\\\"success\\\",\\\"data\\\":{\\\"id\\\":\\\"1\\\",\\\"employee_name\\\":\\\"Tiger Nixon\\\",\\\"employee_salary\\\":\\\"320800\\\",\\\"employee_age\\\":\\\"61\\\",\\\"profile_image\\\":\\\"\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#ba4126a0-1602-4621-8481-c68355370d92">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="EmployeeObject"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

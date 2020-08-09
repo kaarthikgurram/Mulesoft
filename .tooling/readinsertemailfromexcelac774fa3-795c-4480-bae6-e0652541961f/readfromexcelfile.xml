@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7beba802-4b2a-4954-9145-23e185fbbca5" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="b26c4e80-7d11-451c-8070-e5106cf54294" >
+		<file:connection workingDir="C:\softwares\AnypointStudio\AnypointStudio\sampledatafiles" />
+	</file:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="fd9f248a-aef7-4adf-a1aa-829915ee242e" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="P@ssw0rd" database="world" >
+			<db:connection-properties >
+				<db:connection-property key="useSSL" value="false" />
+			</db:connection-properties>
+			<db:connection-properties />
+		</db:my-sql-connection>
+	</db:config>
+	<flow name="readfromexcelfileFlow" doc:id="bb99db94-d17d-41d9-a545-6237f02046d5" >
+		<http:listener doc:name="Listener" doc:id="749656ab-19e5-4718-a548-aaac97a28082" config-ref="HTTP_Listener_config" path="/"/>
+		<file:read doc:name="Read" doc:id="b8917553-28a2-4136-a851-95d6565df4c9" config-ref="File_Config" path="C:\softwares\AnypointStudio\AnypointStudio\sampledatafiles\Details1csv.csv" outputMimeType="application/csv"/>
+		<foreach doc:name="For Each" doc:id="25c74fca-8182-4489-af12-b96c005f19b5" >
+			<ee:transform doc:name="Transform Message" doc:id="05662c1d-c79c-4171-a8d9-3a6b7465371e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<db:insert doc:name="Insertintocustomertable" doc:id="cf1ebfc6-36be-4a84-8141-bb9163930663" config-ref="Database_Config">
+				<db:sql >INSERT INTO `world`.`customer`
+(`customerId`,
+`name`,
+`phoneno`,
+`place`)
+VALUES
+(:customerId, :name, :phoneno, :place);</db:sql>
+				<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	customerId:payload.customerId[0],
+	name: payload.name[0],
+	phoneno: payload.phoneno[0],
+	place: payload.place[0]
+}]]]></db:input-parameters>
+			</db:insert>
+			<logger level="INFO" doc:name="Logger" doc:id="6e714392-671c-44a5-b8bf-ae13b022b30a" />
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="af317aa4-6af9-462c-afde-7727c42778a5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8348d0a4-d020-43e2-9d59-eb85f0372973" message="#[payload]"/>
+	</flow>
+</mule>

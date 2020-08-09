@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="466bc4a6-3a6c-4953-8f19-12a9c2558a4a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="1b6f0e6b-cc93-48e1-b1d6-d41acef4e9dc" >
+		<db:my-sql-connection host="${db.host}" port="3307" user="${db.user}" password="P@ssw0rd" database="world" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="3579ab1e-19ae-49a7-980c-6b532616b565" file="db-${myenv}.yaml" />
+	<flow name="databasemoduleFlow" doc:id="2e9e594e-d4b7-4657-8ba7-14e99a1e65f8" >
+		<http:listener doc:name="Listener" doc:id="aee25bc1-bbc7-46ab-980c-04c365d80dd4" config-ref="HTTP_Listener_config" path="/">
+			<http:error-response >
+				<http:body ><![CDATA[#[output text/plain ---
+ error.description]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<db:select doc:name="select world.city" doc:id="844f40b2-7982-441f-bfec-753111fcba22" config-ref="Database_Config">
+			<db:sql >select * from world.city where CountryCode = :countryCode and District = :district;</db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	countryCode: attributes.queryParams.countryCode as String,
+	district: attributes.queryParams.district as String
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="802094d9-b516-47f0-8061-4179ac860f58" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="bb593edf-21ed-4f1d-88f0-2591b5e87165" message="#[payload]"/>
+	</flow>
+</mule>

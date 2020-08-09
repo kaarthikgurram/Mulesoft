@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="748e737e-1686-4537-bb2d-0231ab03adc1" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="41ce47d1-0bea-42b2-9f2f-498fc39554ad" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="P@ssw0rd" database="world" >
+			<db:connection-properties >
+				<db:connection-property key="useSSL" value="false" />
+			</db:connection-properties>
+		</db:my-sql-connection>
+	</db:config>
+	<flow name="connecttodatabaseFlow" doc:id="78bbbd0b-8868-4d63-9224-b4d584bb0969" >
+		<http:listener doc:name="Listener" doc:id="5fef83df-413f-4106-aec2-3c0aec5d93d0" config-ref="HTTP_Listener_config" path="/"/>
+		<set-payload value="#[%dw 2.0
+output application/java
+---
+{
+	id: 3,
+	name: 'gurram',
+	phoneno: '9885586206',
+	place: 'canada'
+}]" doc:name="Set Payload" doc:id="3c31d96a-82cc-4a0d-9c27-fc3ceecf5e3b" />
+		<db:insert doc:name="Insert" doc:id="3836eca5-5d59-4f0e-a002-f87f0080afac" config-ref="Database_Config">
+			<db:sql >INSERT INTO `world`.`customer`
+(`customerId`,
+`name`,
+`phoneno`,
+`place`)
+VALUES (:id, :name, :phoneno, :place);</db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	id: (attributes.id default "") ++ payload.id as Number,
+	name: (attributes.name default "") ++ payload.name,
+	phoneno: (attributes.phoneno default "") ++ payload.phoneno,
+	place: (attributes.placedefault "") ++ payload.place
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="c116ce5e-1fd9-4031-9aa5-d830ce4af926" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload.ID,
+	name: payload.Name,
+	countryCode: payload.CountryCode
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b80717bc-bef8-41f6-baf4-a1997ca7f7f1" message="#[payload]"/>
+	</flow>
+</mule>

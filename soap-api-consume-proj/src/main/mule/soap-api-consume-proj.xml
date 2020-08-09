@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="5f317730-2eec-4ed0-aeee-3a99b501e3a7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="412ac22a-05de-4125-95a0-7bab418ab540" >
+		<wsc:connection wsdlLocation="http://www.dneonline.com/calculator.asmx?WSDL" service="Calculator" port="CalculatorSoap" address="http://www.dneonline.com/calculator.asmx" >
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<flow name="soap-api-consume-projFlow" doc:id="13530708-ceb7-49ee-bca5-ec11339044c4" >
+		<http:listener doc:name="Listener" doc:id="d24d302b-dd68-4062-aaf6-2b00aea1d92d" config-ref="HTTP_Listener_config" path="/{operation}/{num1}/{num2}"/>
+		<ee:transform doc:name="Transform Message" doc:id="f28e7912-df00-45a3-9821-d10e0dee6aeb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+ns ns0 http://tempuri.org/
+---
+{
+	ns0#Add: {
+		ns0#StringA: attributes.uriParams.operation,
+		ns0#intB: attributes.uriParams.num1,
+		ns0#intC: attributes.uriParams.num2
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="a982b54f-027f-46ec-9b14-be6b03ab96cf" >
+			<when expression='#[%dw 2.0
+var Add = ???
+---
+attributes.uriParams.operation == "Add"]'>
+				<wsc:consume doc:name="Consume" doc:id="57a27f54-5922-4b7c-87b8-375cf2856012" config-ref="Web_Service_Consumer_Config" operation="Add"/>
+			</when>
+			<when expression="#[%dw 2.0
+var Divide = ???
+---
+attributes.uriParams.operation == Divide]">
+				<wsc:consume doc:name="Consume" doc:id="ca1ee88f-1b2c-487a-b2b1-4965ca1014f3" config-ref="Web_Service_Consumer_Config" operation="Divide"/>
+			</when>
+			<when expression="#[%dw 2.0
+var Substract = ???
+---
+attributes.uriParams.operation == Substract]">
+				<wsc:consume doc:name="Consume" doc:id="7ef8c6ff-959b-492a-b144-3a943879a9f7" config-ref="Web_Service_Consumer_Config" operation="Subtract"/>
+			</when>
+			<when expression="#[%dw 2.0
+var Multiply = ???
+---
+attributes.uriParams.operation == Multiply]">
+				<wsc:consume doc:name="Consume" doc:id="1f78b0ec-a4b6-4264-95be-d0cf25003019" config-ref="Web_Service_Consumer_Config" operation="Multiply"/>
+			</when>
+			<otherwise >
+				<set-payload value="unknown operation" doc:name="Set Payload" doc:id="d5fb60ef-7fe2-4d91-afb1-5de7b50557df" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

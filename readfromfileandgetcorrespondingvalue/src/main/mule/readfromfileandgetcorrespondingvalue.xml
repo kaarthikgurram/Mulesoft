@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ebd0be86-1409-4238-b3eb-a3560cb37938" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="53e674ad-46f7-477c-85f3-999f7429708d" >
+		<file:connection workingDir="C:\softwares\AnypointStudio\AnypointStudio\sampledatafiles" />
+	</file:config>
+	<flow name="readfromfileandgetcorrespondingvalueFlow" doc:id="00fb2cbf-3e1c-4e5a-9ecd-235d2731f8fe" >
+		<http:listener doc:name="Listener" doc:id="351883fc-2ce8-4d42-b6b7-7cace1ba6137" config-ref="HTTP_Listener_config" path="/"/>
+		<file:read doc:name="Read" doc:id="8af6ed72-9800-4227-b973-fd8f161769c1" config-ref="File_Config" path="C:\softwares\AnypointStudio\AnypointStudio\sampledatafiles\Details1csv.csv" outputMimeType="application/csv"/>
+		<foreach doc:name="For Each" doc:id="7b12fb7a-2e8e-4ad0-bfff-3c6fdb65a265" >
+			<ee:transform doc:name="Transform Message" doc:id="a707197a-41e6-41a6-85ce-8dd09c8ec054">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="fbd18f7e-d3f1-42c4-8b05-0fec5571c422" message="#[payload]"/>
+			<ee:transform doc:name="Transform Message" doc:id="ebd2e071-f629-4931-b45c-83465ead1c72" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="415dc0ea-f0e7-4e2c-be93-6dfce2699ca4" message="#[payload]"/>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="e9975220-e076-434f-867f-f0d35f215884" message="#[payload]"/>
+	</flow>
+</mule>

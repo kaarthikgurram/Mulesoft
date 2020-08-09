@@ -1,0 +1,13 @@
+{
+"id": "1",
+"first_name": "karthik",
+"last_name": "gurram",
+"phoneno": "5878908603",
+"street_no": "608 9th sw",
+"city": "calgary",
+"state": "Alberta",
+"country": "Canada",
+"accountNumber": "345435435",
+"balance": "10",
+"pin": "T2P2B3"
+}

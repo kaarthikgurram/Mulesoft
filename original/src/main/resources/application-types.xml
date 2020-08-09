@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="inputEmployee" format="json">
+      <types:shape format="weave" example="inputEmployee.json"><![CDATA[%dw 2.0
+
+type inputEmployee = {|
+  employee: {|
+    firstName: String, 
+    lastName: String, 
+    address: Array<{|      AddressType: String,       street: String,       city: String,       state: String    |}>
+  |}
+|} {"example": "{\"employee\":{\"firstName\":\"Akash\",\"lastName\":\"Ranglani\",\"address\":[{\"AddressType\":\"Primary\",\"street\":\"1223, 11 redwood St..\",\"city\":\"LA\",\"state\":\"CA\"},{\"AddressType\":\"Secondary\",\"street\":\"14332, 14th Clover garden\",\"city\":\"California Bay Area\",\"state\":\"CA\"}]}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#a6efe947-c182-465e-8ed9-1633520ecb98">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="inputEmployee"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

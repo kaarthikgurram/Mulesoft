@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="bc918294-cd9c-4050-a741-a8270568dc60" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="transformer-proj1Flow" doc:id="bd2748cf-2d1b-47b5-8c4e-09b37f6b9308" >
+		<http:listener doc:name="Listener" doc:id="086ef5b7-acf9-4bc8-be82-38c5ed7dd775" config-ref="HTTP_Listener_config" path="/transformer"/>
+		<ee:transform doc:name="Transform Message" doc:id="a6efe947-c182-465e-8ed9-1633520ecb98" >
+			<ee:message >
+				<ee:set-payload resource="dwl/AddressType.dwl" />
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="dwl/name.dwl" variableName="name" />
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9c5850e3-bc0c-43a3-ab31-1a7ccacf6499" message="#[payload]"/>
+	</flow>
+</mule>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="PostTransaction" doc:name="HTTP Listener config" doc:id="8ffca23a-c8cf-4999-9742-a392db92bd3f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9b1e4b1c-5312-4671-96a4-9e3394b321af" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="P@ssw0rd" database="bank" >
+			<db:connection-properties >
+				<db:connection-property key="useSSL" value="false" />
+			</db:connection-properties>
+		</db:my-sql-connection>
+	</db:config>
+	<flow name="posttransactionFlow" doc:id="af61f8ad-88ab-4b97-b8d0-816ed43ee472" >
+		<http:listener doc:name="Listener" doc:id="ff6be5a7-8ef7-4c42-a785-613e63c1e84b" config-ref="PostTransaction" path="/postTransaction" allowedMethods="POST"/>
+		<db:select doc:name="Select" doc:id="6ef93015-4c72-473b-b6d9-7145a5764e23" config-ref="Database_Config">
+			<db:sql >select * from bank.customer_info;</db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="2eba6316-e702-40ff-b1f8-95c3cef244fe" message="#[payload]"/>
+	</flow>
+</mule>

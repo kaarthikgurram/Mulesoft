@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="da539b6a-935c-4e91-845d-e59fa86b1349" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="d578cb0d-5f6f-4e75-9966-f76f3355ecad" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="P@ssw0rd" database="world" />
+	</db:config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="90a30f8a-1151-4d55-8735-849722c194b6" >
+		<wsc:connection wsdlLocation="http://www.dneonline.com/calculator.asmx?WSDL" service="Calculator" port="CalculatorSoap" address="http://www.dneonline.com/calculator.asmx">
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<flow name="onerrorFlow" doc:id="9b940e03-c0a5-4a64-a392-3783933e5d48" >
+		<http:listener doc:name="Listener" doc:id="7463b5c0-986b-43a0-b30a-07f95cd9798e" config-ref="HTTP_Listener_config" path="/">
+			<http:error-response >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+error.errorType]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<flow-ref doc:name="Flow Reference" doc:id="722a18f4-5e22-4721-ba41-5822ec4379c7" name="dbFlow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="1d35b209-f07e-48b5-8adb-e1cc648870f9" message="executing logger after exception"/>
+	</flow>
+	<flow name="dbFlow" doc:id="74b88e63-9f63-4d64-8490-dbfcfe1f1ed7" >
+		<db:select doc:name="Select" doc:id="e66fbb5b-4d5b-44b9-b5af-dad1428dd3b8" config-ref="Database_Config">
+			<error-mapping sourceType="DB:CONNECTIVITY" targetType="APP:DB Connectivity Error" />
+			<db:sql>select * from world.city
+where CountryCode = 'AFG' and District = 'Kabol';</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="0708cad4-a01f-4012-9d9a-e8efdfda634b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	intA: attributes.queryParams.num1,
+	intB: attributes.queryParams.num2	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume doc:name="Consume" doc:id="93839cc8-e184-42fe-9a67-1728fa381419" config-ref="Web_Service_Consumer_Config" operation="Divide">
+			<error-mapping sourceType="WSC:SOAP_FAULT" targetType="APP:SOAP Fault" />
+		</wsc:consume>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="53ce68db-4a23-4dc3-977c-940099bfa33a" type="APP:DB Connectivity Error">
+				<logger level="INFO" doc:name="Logger" doc:id="75e05c79-cdba-4114-b7cc-81e012a8050f" message="error due to connectivity"/>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c67bb156-559c-4bff-bd23-71e3f7286d42" type="APP:SOAP Fault">
+				<logger level="INFO" doc:name="Logger" doc:id="9702b752-d7e2-41ca-90a2-ca47a5edc737" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4c66612f-2f0b-4d2d-9966-ef2ac7493a37" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="7cafca88-0cff-4dbf-95f2-21b3036cd706" basePath="/api/v1" >
+		<http:request-connection host="dummy.restapiexample.com" port="80"/>
+	</http:request-config>
+	<flow name="mainFlow" doc:id="93569d41-2516-4b87-813c-2cc0a7895471" >
+		<http:listener doc:name="Listener" doc:id="b672123c-09c1-4b50-ab4f-71907755395a" config-ref="HTTP_Listener_config" path="/"/>
+		<choice doc:name="Choice" doc:id="2a80ba5f-783f-4462-a3c5-637792a734f2" >
+			<when expression="#[attributes.queryParams.empId == null]">
+				<flow-ref doc:name="Flow Reference" doc:id="642a29b4-bd84-46d5-877b-567acbb042f4" name="getEmployeesList"/>
+			</when>
+			<when expression="#[attributes.queryParams.empId != null]">
+				<flow-ref doc:name="Flow Reference" doc:id="b602d01c-5b5a-480c-81f8-14d10d9aa81b" name="getEmployesById"/>
+			</when>
+			<otherwise>
+				<set-payload value="Operation not Suppported" doc:name="Set Payload" doc:id="c7b00691-505e-4308-bd91-b0cf78e6d12c" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="getEmployesById" doc:id="465cedd5-b20e-4751-9e95-7e595722611e" >
+		<http:request method="GET" doc:name="Request" doc:id="3db9bc09-cc8e-4cfe-aef8-c9cead62fa70" config-ref="HTTP_Request_configuration" path="/employee/{id}">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	id : attributes.queryParams.empId
+}]]]></http:uri-params>
+		</http:request>
+	</flow>
+	<flow name="getEmployeesList" doc:id="489579a3-4e15-426b-a85c-c40c9de527f6" >
+		<http:request method="GET" doc:name="Request" doc:id="c4584eee-ca78-467f-badb-264a5c7d5991" config-ref="HTTP_Request_configuration" path="/employees">
+		</http:request>
+	</flow>
+</mule>

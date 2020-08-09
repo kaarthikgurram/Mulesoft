@@ -1,0 +1,25 @@
+#%RAML 1.0
+title: getapibyqueryparam
+baseUri: http://localhost:8081
+
+/customers:
+
+  /fetchCustomerById:
+    get:
+      queryParameters:
+        /{id}:
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                {
+                  "name": "karthik"
+                }
+        404:
+          description: Page Not Found
+          body:
+            application/json:
+              example:
+                "phonenumbe": "5878908603"        

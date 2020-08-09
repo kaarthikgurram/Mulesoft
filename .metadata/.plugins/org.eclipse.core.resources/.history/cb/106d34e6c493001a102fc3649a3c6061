@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="PostTransaction" doc:name="HTTP Listener config" doc:id="8ffca23a-c8cf-4999-9742-a392db92bd3f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9a1904f3-2e33-4955-92c1-c76908e785c3" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="P@ssw0rd" database="bank" >
+			<db:connection-properties >
+				<db:connection-property key="useSSL" value="false" />
+			</db:connection-properties>
+		</db:my-sql-connection>
+	</db:config>
+	<flow name="posttransactionFlow" doc:id="af61f8ad-88ab-4b97-b8d0-816ed43ee472" >
+		<http:listener doc:name="Listener" doc:id="ff6be5a7-8ef7-4c42-a785-613e63c1e84b" config-ref="PostTransaction" path="/postTransaction" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="ffc354a9-24aa-415a-b241-5148a5385eb3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Set Global variables" doc:id="c168e66a-1eb6-4a59-8fd5-f9eda8eb489e" name="setVariables"/>
+		<flow-ref doc:name="Check Member Eligibility" doc:id="c47a9f2d-c0a1-4c0e-9c1f-6792f1086b32" name="CheckMemberStatus"/>
+		<choice doc:name="Choice" doc:id="f33cfff4-ebf6-4e5f-89c1-c4fd58caa4a1" >
+			<when expression="#[vars.MemberStatus == 'ACTIVE']">
+				<flow-ref doc:name="SetBalance" doc:id="26abf29f-5656-4814-8b36-653b517b3f31" name="ExtractBalanceVariable"/>
+				<choice doc:name="Choice" doc:id="96832580-37d0-42d8-9e6d-b18cbd322eb8">
+			<when expression="#[vars.balance &gt; vars.transactionAmount]">
+				<flow-ref doc:name="Flow Reference" doc:id="3cdc1e58-36e2-4b9d-b79c-46728dadb9a3" name="successfulTransaction" />
+						<flow-ref doc:name="PostTransactionEvents" doc:id="ada379d7-d4ee-42ce-ab0c-cc7b2fb83aab" name="PostTransactionEvents"/>
+						<set-variable value="#[vars.balance - vars.transactionAmount]" doc:name="Set Variable" doc:id="7a7eb5ec-11f2-4a75-9419-187c8a61409a" variableName="remainingBal"/>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="691dc853-cc8e-4b2f-8a2a-05453f4d45ab" message="Member Doesnt have enough balance to process Transaction" />
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="NotEligibleErrorStatus" doc:id="07063213-3fbb-4894-aa9b-67df67c6965c" message="Member Account doesnt have active status to process transactiion"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="ExtractBalanceVariable" doc:id="113c164d-a872-437f-93f8-ef2f07fcd8cf" >
+		<db:select doc:name="Select" doc:id="d8014467-d472-4498-a06a-e614ad42b18a" config-ref="Database_Config">
+			<db:sql>select * from bank.account_info
+where account_number = :accountNumber</db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	accountNumber: vars.AccountNumber
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="11bf37cb-5f5d-45a9-b611-42c7583dd361">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[%dw 2.0
+output application/java
+---
+payload.balance[0]]" doc:name="GetBalance" doc:id="07283891-02ef-4ea6-b3bb-01f7df210ab8" variableName="balance" />
+	</flow>
+	<flow name="successfulTransaction" doc:id="9668214d-5505-47de-9630-35dcb3acf809" >
+		<logger level="INFO" doc:name="Logger" doc:id="890713b6-1b80-4372-88e3-7fe8da11acef" message="Transaction Successful"/>
+	</flow>
+	<flow name="setVariables" doc:id="a4c5d880-2e8c-4f24-b512-3d244acf3b29" >
+		<set-variable value="#[payload.accountNumber]" doc:name="Set Account Number Variable" doc:id="43229203-38ff-4de1-831b-1de5afcb8de4" variableName="accountNumber"/>
+		<set-variable value="#[payload.balance]" doc:name="Set balance Variable" doc:id="1b6d8a9d-7b6a-49d9-85f0-6977a2094a3a" variableName="transactionAmount"/>
+	</flow>
+	<flow name="CheckMemberStatus" doc:id="55df2c82-0690-4db6-86af-4a390fee6104" >
+		<db:select doc:name="Select" doc:id="291480b6-718d-4728-86ff-8a3aea89f348" config-ref="Database_Config">
+			<db:sql >select * from bank.customer_info
+where id = ( select customer_info_id from bank.account_info
+where account_number = :accountNumber ); </db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	accountNumber: vars.AccountNumber
+}]]]></db:input-parameters>
+		</db:select>
+		<set-variable value="#[payload.member_status[0]]" doc:name="setMemberStatus" doc:id="3f4dd7a2-21a2-41bb-aac3-ffbdcf87267a" variableName="MemberStatus"/>
+	</flow>
+	<flow name="PostTransactionEvents" doc:id="0ae80441-f24b-49e4-9ead-a90f43cc84c4" >
+	</flow>
+</mule>
